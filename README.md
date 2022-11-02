@@ -5,7 +5,9 @@
 
 ## Install
 Клонируем репозиторий или качаем код.
+```python
 pip install -r requirements.txt
+```
 
 ### В файле data\config.py вы должны указать свои данные
 ```python
