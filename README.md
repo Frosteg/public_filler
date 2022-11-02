@@ -27,12 +27,8 @@
 ### В файле config.py вы должны указать свои данные
 ```python
 <token="your_bot_token"  - токен бота
-
 chat_link = 'your_chat_link' - ссылка на канал формата https://t.me/канал
-
 channel_id = 'your_channel_id' - id этого же канала
-
 admin_id = 'your_id' - Ваш персональный id
-
-send = f'<a href="{chat_link}">*your_chanel_name*</a>' - подпись под вашим контентом. в поле *your_chanel_name* прописать название вашего канала
+send = f'<a href="{chat_link}">*your_chanel_name*</a>' - подпись. в поле *your_chanel_name* прописать название вашего канала
 ```
