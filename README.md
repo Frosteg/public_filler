@@ -14,6 +14,11 @@ channel_id = 'your_channel_id' - id этого же канала
 admin_id = 'your_id' - Ваш персональный id
 send = f'<a href="{chat_link}">*your_chanel_name*</a>' - подпись. в поле *your_chanel_name* прописать название вашего канала
 ```
+### В файле exec\board.py вы должны указать промежуток времени в который бот будет постить контент
+```python
+main_start1 = datetime.time(8,00,0)  - время начала (Часы/Минуты/Секунды)
+main_end1 = datetime.time(23,59,50) - время конца (Часы/Минуты/Секунды)
+```
 ## Start
 Переходим в папку куда вы распаковали код или подключаем ее через GIt.
 <p>Запускаем virtual environment и запускаем выполнение бота
