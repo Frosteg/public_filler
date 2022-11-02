@@ -24,7 +24,7 @@ main_end1 = datetime.time(23,59,50)
 
 date_time = datetime.datetime.now().time()
 
-@dp.message_handler(commands=['first_start'])
+@dp.message_handler(commands=['start'])
 async def start(message: types.Message):
     global give
     global take  
