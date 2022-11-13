@@ -11,7 +11,7 @@ pip install -r requirements.txt
 
 ### В файле data\config.py вы должны указать свои данные
 ```python
-<token="your_bot_token"  - токен бота
+token="your_bot_token"  - токен бота
 chat_link = 'your_chat_link' - ссылка на канал формата https://t.me/канал
 channel_id = 'your_channel_id' - id этого же канала
 admin_id = 'your_id' - Ваш персональный id
@@ -21,6 +21,7 @@ send = f'<a href="{chat_link}">*your_chanel_name*</a>' - подпись. в по
 ```python
 main_start1 = datetime.time(8,00,0)  - время начала (Часы/Минуты/Секунды) - стандартное 8:00:00 
 main_end1 = datetime.time(23,59,50) - время конца (Часы/Минуты/Секунды) - стандартное 23:59:50
+end = 1439 - количество минут  от полуночи до установленного в main_end1 времени
 ```
 Когда бот увидит, что текущее время в промежутке установленном вами - он начнет отправлять контент.
 
