@@ -12,6 +12,8 @@ import time
 give = True
 take = True
 
+keyboard = types.InlineKeyboardMarkup()
+keyboard.add(types.InlineKeyboardButton(text="Удалить", callback_data="delete"))
 
 async def time_Main1():
     global delta_time
@@ -103,12 +105,27 @@ async def process_parser_command(message: types.Message):
                 else:
                     await presender.presend_smthg()
                     await bot.send_message(admin_id, f'Следующий пост в {post}\n{posts}')
+                    await message.answer("Нажмите чтобы удалить пост", reply_markup=keyboard)
                     await asyncio.sleep(delay) 
                     await give_bot.send_smthg()           
         else:
             await asyncio.sleep(5)
     else:
         await bot.send_message(message.chat.id, f'Отправка приостановлена')
+
+@dp.callback_query_handler(text="delete")
+async def process_callback_button1(callback_query: types.CallbackQuery):
+    await bot.answer_callback_query(callback_query.id)
+    await deleter.delete_smthg()
+    await bot.send_message(callback_query.from_user.id,'Неугодный пост удален')
+    posts = post_checker.check_post()
+    main_result = post_checker.main_result
+    if main_result == 0:
+        await bot.send_message(admin_id, f"{posts}. Отпрвлять нечего")
+    else:
+        await presender.presend_smthg()
+        await bot.send_message(admin_id, f'Следующий пост в {post}\n{posts}')
+        await bot.send_message(admin_id, "Нажмите чтобы удалить пост", reply_markup=keyboard)
 
 @dp.message_handler(Text(equals='Удалить',ignore_case=True))
 async def process_del_command(message: types.Message):
