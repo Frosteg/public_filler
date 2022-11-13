@@ -20,6 +20,7 @@ def showHours(main_result) :
     return "{0} {1}".format(main_result, suffix)
 
 def check_post():
+    global main_result
     cur.execute("SELECT * FROM Content where sent = 0 AND group_id == 'NotGroup'")
     result = cur.fetchall()
     if result == None:
