@@ -6,31 +6,33 @@ from connector import dp, bot
 from data.config import admin_id, end, begin
 from random import randint
 from exec import give_bot, presender, post_checker, deleter
+from data.dict import FIRST_START,  STOP
 import asyncio
 import time
 give = True
-
-keyboard1 = types.InlineKeyboardMarkup()
-keyboard1.add(types.InlineKeyboardButton(text="Запустить отправку", callback_data="send"))
+take = True
 
 keyboard = types.InlineKeyboardMarkup()
 keyboard.add(types.InlineKeyboardButton(text="Удалить", callback_data="delete"))
+keybord_start = types.InlineKeyboardMarkup()
+keybord_start.add(types.InlineKeyboardButton(text="Запустить отправку", callback_data="send"))
+keyboard_end = types.InlineKeyboardMarkup()
+keyboard_end.add(types.InlineKeyboardButton(text="Остановить отправку", callback_data="stop"))
 
-time_start = begin//60
-start_time = f"{time_start}:00:00"
-
-time_end = end//60
-end_time = f"{time_end}:00:00"
+del_btn = InlineKeyboardButton(text="Удалить", callback_data="delete")
+stp_btn = InlineKeyboardButton(text="Остановить отправку", callback_data="stop")
+inline_kb_full = InlineKeyboardMarkup(row_width=2).add(del_btn,stp_btn)
 
 
 @dp.message_handler(commands=['start'])
 async def start(message: types.Message):
     global give
     print(give)
-    keyboard_markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-    keyboard_markup.add('Запустить отправку','Остановить отправку')
+    
+    #keyboard_markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    
     #await message.reply(ANSWER_START)
-    await message.reply(f"Привет Этот бот будет отправлять посты\nс {start_time} до {end_time}\nПринимать контент этот бот может круглосуточно.\nКак часто будут выходить посты?\nОтправь мне 2 цирфы через пробел.\nПервая время между поставми, вторая погрешность для небольшой рандомизации")
+    await message.reply(FIRST_START)
     
 @dp.message_handler(Text(contains='',ignore_case=True))
 async def time_send(message: types.Message):
@@ -40,8 +42,10 @@ async def time_send(message: types.Message):
     split = user_msg.split()
     usermsg = int(split[0])
     userdel = int(split[1])
-    await message.reply(f"Отлично. Твои посты буду выходить раз в {usermsg} с погрешностью {userdel}.\nЧтобы начать работать отправь боту текст 'Запустить отправку' либо нажми кнопку на клавиатуре бота")
-    await message.answer("Нажмите чтобы запустить отправку", reply_markup=keyboard1)
+    await message.reply(
+    f"Отлично. \n\
+Твои посты буду выходить раз в {usermsg} с погрешностью {userdel}.")
+    await message.answer("Нажмите чтобы запустить отправку", reply_markup=keybord_start)
 
 async def delay_count():
     global delay
@@ -93,12 +97,13 @@ async def PostSendAttempt():
 async def PresendAndSend():
     await presender.presend_smthg()
     await bot.send_message(admin_id, f'Следующий пост в {post}\n{posts}')
-    await bot.send_message(admin_id,"Нажмите чтобы удалить пост", reply_markup=keyboard)
+    await bot.send_message(admin_id,"Выберите действие", reply_markup=inline_kb_full)
     await asyncio.sleep(delay) 
     await give_bot.send_smthg()  
 
-@dp.callback_query_handler(text="send")
+@dp.callback_query_handler(text = 'send')
 async def process_callback_button1(callback_query: types.CallbackQuery):
+    await bot.answer_callback_query(callback_query.id)
     message: types.Message
     global give
     global posts
@@ -115,8 +120,10 @@ async def process_callback_button1(callback_query: types.CallbackQuery):
             await asyncio.sleep(5)
     else:
         await bot.send_message(admin_id, f'Отправка приостановлена')
+        await bot.send_message(callback_query.from_user.id, STOP)
+        await bot.send_message(admin_id, "Нажмите чтобы запустить отправку", reply_markup=keybord_start)
 
-@dp.callback_query_handler(text="delete")
+@dp.callback_query_handler(text = 'delete')
 async def process_callback_button1(callback_query: types.CallbackQuery):
     await bot.answer_callback_query(callback_query.id)
     await deleter.delete_smthg()
@@ -127,11 +134,13 @@ async def process_callback_button1(callback_query: types.CallbackQuery):
     if main_result != 0:
         await presender.presend_smthg()
         await bot.send_message(admin_id, f'Следующий пост в {post}\n{posts}')
-        await bot.send_message(admin_id, "Нажмите чтобы удалить пост", reply_markup=keyboard)
+        await bot.send_message(admin_id,"Выберите действие", reply_markup=inline_kb_full)
 
-@dp.message_handler(Text(equals='Остановить отправку',ignore_case=True))
-async def process_parser_command(message: types.Message):
+@dp.callback_query_handler(text = 'stop')
+async def process_callback_button1(callback_query: types.CallbackQuery):
+    await bot.answer_callback_query(callback_query.id)
     global give
     give = False
     print(give)
-    await bot.send_message(message.chat.id,f'Остановка работы отправки')
+    await bot.send_message(callback_query.from_user.id, STOP)
+    await bot.send_message(admin_id, "Нажмите чтобы запустить отправку", reply_markup=keybord_start)
