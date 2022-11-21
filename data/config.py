@@ -14,8 +14,5 @@ cur = conn.cursor()
 up = 1
 sent = 0
 
-main_start1 = datetime.time(8,00,0) #время начала отправки постов
-main_end1 = datetime.time(23,59,0) #время конца отправки постов
-date_time = datetime.datetime.now().time()
-
-end = 1439 #количество минут  от полуночи до установленного в main_end1 времени
+end = 1440
+begin = 480
