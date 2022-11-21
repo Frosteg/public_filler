@@ -3,115 +3,118 @@ from aiogram.types import ReplyKeyboardRemove, ReplyKeyboardMarkup, KeyboardButt
 from aiogram import types
 from aiogram.dispatcher.filters import Text
 from connector import dp, bot
-from data.config import admin_id, main_start1, main_end1, date_time, end
+from data.config import admin_id, end, begin
 from random import randint
 from exec import give_bot, presender, post_checker, deleter
-#from exec.post_checker import main_result
 import asyncio
 import time
 give = True
-take = True
+
+keyboard1 = types.InlineKeyboardMarkup()
+keyboard1.add(types.InlineKeyboardButton(text="Запустить отправку", callback_data="send"))
 
 keyboard = types.InlineKeyboardMarkup()
 keyboard.add(types.InlineKeyboardButton(text="Удалить", callback_data="delete"))
 
-async def time_Main1():
-    global delta_time
-    delta_time = main_start1 <= date_time <= main_end1
+time_start = begin//60
+start_time = f"{time_start}:00:00"
+
+time_end = end//60
+end_time = f"{time_end}:00:00"
+
 
 @dp.message_handler(commands=['start'])
 async def start(message: types.Message):
     global give
-    global take  
-    print(take)
     print(give)
     keyboard_markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
     keyboard_markup.add('Запустить отправку','Остановить отправку')
     #await message.reply(ANSWER_START)
-    await message.reply(f"Привет Этот бот будет отправлять посты\nс {main_start1} до {main_end1}\nПринимать контент этот бот может круглосуточно.\nКак часто будут выходить посты?\nОтправь мне текст 'Время X', где X это количество минут")
-
-@dp.message_handler(Text(contains='Время',ignore_case=True))
+    await message.reply(f"Привет Этот бот будет отправлять посты\nс {start_time} до {end_time}\nПринимать контент этот бот может круглосуточно.\nКак часто будут выходить посты?\nОтправь мне 2 цирфы через пробел.\nПервая время между поставми, вторая погрешность для небольшой рандомизации")
+    
+@dp.message_handler(Text(contains='',ignore_case=True))
 async def time_send(message: types.Message):
-    global str_msg
-    usermsg = message.text
-    #usermsg = usermsg.capitalize
-    if usermsg == 'Время':
-        return 
-    str_msg = (str(usermsg))
-    str_msg = str_msg.replace("Время ","")
-    str_msg = int(str_msg)
-    await message.reply(f"Твои посты буду выходить раз в {str_msg} минут.\nТеперь нужно установить погрешность, чтобы твои посты не отправлялись в одно и тоже время.\nОтправь мне текст 'Задержка X', где X это количество минут.")
-
-@dp.message_handler(Text(contains='Задержка',ignore_case=True))
-async def time_send(message: types.Message):
-    global str_del
-    userdel = message.text
-    #userdel = userdel.capitalize
-    if userdel == 'Задержка':
-        return 
-    str_del = (str(userdel))
-    str_del = str_del.replace("Задержка ","")
-    str_del = int(str_del)
-    await message.reply(f"Отлично. Погрешность составляет {str_del} минут.\nТвои посты буду выходить раз в {str_msg} с погрешностью {str_del}.\nЧтобы начать работать отправь боту текст 'Запустить отправку' либо нажми кнопку на клавиатуре бота")
+    global usermsg
+    global userdel
+    user_msg = message.text
+    split = user_msg.split()
+    usermsg = int(split[0])
+    userdel = int(split[1])
+    await message.reply(f"Отлично. Твои посты буду выходить раз в {usermsg} с погрешностью {userdel}.\nЧтобы начать работать отправь боту текст 'Запустить отправку' либо нажми кнопку на клавиатуре бота")
+    await message.answer("Нажмите чтобы запустить отправку", reply_markup=keyboard1)
 
 async def delay_count():
     global delay
     global post
-    global time_local
-    delay = 60 * (str_msg + randint(0, str_del))
+    delay = 60 * (usermsg + randint(0, userdel))
     nowTime = time.time()
     newdelay = nowTime + delay
     time_local = time.localtime(newdelay)
     time.strftime('%H:%M:%S', time_local)
     post = time.strftime('%H:%M:%S', time_local)
-
-async def time_send(delay):
-    global give
-    end = 1440
-    min_send = delay/60
+    
+async def IsTimeTrue():
+    global minute_total_now
+    #global IsTimeAfterStart
+    global IsTimeInPlace
     nowTime = time.time()
     time_local = time.localtime(nowTime)
     hour = time_local[3] * 60
     minute = time_local[4]
     minute_total_now = hour + minute
+    IsTimeInPlace =  begin <= minute_total_now <= end
+    
+
+async def time_check():
+    global give
+    min_send = delay/60
     difference = end - minute_total_now
-    print(difference)
     diff = min_send > difference
-    print(diff)
-    if diff == True:
+    if diff:
         give = False
-       
-@dp.message_handler(Text(equals='Запустить отправку',ignore_case=True))
-async def process_parser_command(message: types.Message):
+
+async def TimeSendCheck():
+    await IsTimeTrue()
+    if IsTimeInPlace:
+        await delay_count()
+        await time_check()
+
+async def PostSendAttempt():
+    global main_result
+    global posts
+    posts = post_checker.check_post()
+    main_result = post_checker.main_result
+    if main_result == 0:
+        await bot.send_message(admin_id, f"{posts}. Отпрвлять нечего")
+        while main_result == 0:
+            await asyncio.sleep(5)
+            main_result = post_checker.main_result    
+
+async def PresendAndSend():
+    await presender.presend_smthg()
+    await bot.send_message(admin_id, f'Следующий пост в {post}\n{posts}')
+    await bot.send_message(admin_id,"Нажмите чтобы удалить пост", reply_markup=keyboard)
+    await asyncio.sleep(delay) 
+    await give_bot.send_smthg()  
+
+@dp.callback_query_handler(text="send")
+async def process_callback_button1(callback_query: types.CallbackQuery):
+    message: types.Message
     global give
     global posts
     give = True
     print(give)
-    await bot.send_message(message.chat.id, 'Запускаю отправку')
+    await bot.send_message(admin_id, 'Запускаю отправку')
     while give == True:
-        await time_Main1()
-        if delta_time:
-            await delay_count()
-            await time_send(delay)
-            print(give)
-            if delta_time and give == True:
-                posts = post_checker.check_post()
-                main_result = post_checker.main_result
-                if main_result == 0:
-                    await bot.send_message(admin_id, f"{posts}. Отпрвлять нечего")
-                    while main_result == 0:
-                        await asyncio.sleep(5)
-                        main_result = post_checker.main_result                        
-                else:
-                    await presender.presend_smthg()
-                    await bot.send_message(admin_id, f'Следующий пост в {post}\n{posts}')
-                    await message.answer("Нажмите чтобы удалить пост", reply_markup=keyboard)
-                    await asyncio.sleep(delay) 
-                    await give_bot.send_smthg()           
+        await TimeSendCheck()
+        if IsTimeInPlace and give == True:
+            await PostSendAttempt()                       
+            if main_result != 0:
+                await PresendAndSend() 
         else:
             await asyncio.sleep(5)
     else:
-        await bot.send_message(message.chat.id, f'Отправка приостановлена')
+        await bot.send_message(admin_id, f'Отправка приостановлена')
 
 @dp.callback_query_handler(text="delete")
 async def process_callback_button1(callback_query: types.CallbackQuery):
@@ -120,25 +123,11 @@ async def process_callback_button1(callback_query: types.CallbackQuery):
     await bot.send_message(callback_query.from_user.id,'Неугодный пост удален')
     posts = post_checker.check_post()
     main_result = post_checker.main_result
-    if main_result == 0:
-        await bot.send_message(admin_id, f"{posts}. Отпрвлять нечего")
-    else:
+    await PostSendAttempt()
+    if main_result != 0:
         await presender.presend_smthg()
         await bot.send_message(admin_id, f'Следующий пост в {post}\n{posts}')
         await bot.send_message(admin_id, "Нажмите чтобы удалить пост", reply_markup=keyboard)
-
-@dp.message_handler(Text(equals='Удалить',ignore_case=True))
-async def process_del_command(message: types.Message):
-    await deleter.delete_smthg()
-    await message.reply('Неугодный пост удален')
-    posts = post_checker.check_post()
-    main_result = post_checker.main_result
-    if main_result == 0:
-        await bot.send_message(admin_id, f"{posts}. Отпрвлять нечего")
-    else:
-        await presender.presend_smthg()
-        await bot.send_message(admin_id, f'Следующий пост в {post}\n{posts}')
-    
 
 @dp.message_handler(Text(equals='Остановить отправку',ignore_case=True))
 async def process_parser_command(message: types.Message):
@@ -146,4 +135,3 @@ async def process_parser_command(message: types.Message):
     give = False
     print(give)
     await bot.send_message(message.chat.id,f'Остановка работы отправки')
-    
