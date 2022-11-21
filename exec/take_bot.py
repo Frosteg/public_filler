@@ -29,6 +29,7 @@ async def data_collector(message: types.Message):
     group_id = message.media_group_id
     if group_id == None:
         group_id = 'NotGroup'
+    
     cur.execute(f"SELECT * FROM 'Content' where 'file_id' = '{file_id}'")
     if cur.fetchone() is None:
         rss_input= (file_id, group_id, mes_type, sent)
@@ -48,11 +49,3 @@ async def process_parser(message: types.Message):
     await data_collector(message)
     posts = post_checker.check_post() 
     await bot.send_message(admin_id, f'Файл получен и добавлен в бд\n{posts}')
-    
-
-
-
-
-    
-    
-    
