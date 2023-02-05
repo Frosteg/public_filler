@@ -1,7 +1,7 @@
-from exec import board
-from exec import take_bot
-from exec import give_bot
-from exec import presender
-from exec import post_checker
-from exec import deleter
+from exec import MainFrame
+from exec import Taker
+from exec import Seneder
+from exec import PreSender
+from exec import PostChecker
+from exec import PostDeleter
 
