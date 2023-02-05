@@ -14,13 +14,12 @@ cur = conn.cursor()
 up = 1
 sent = 0
 
-end = 1440
 begin = 480
+end = 1380
+day = 1440
 
-time_start = begin*60
-time_start = time.gmtime(time_start)
+time_start = time.gmtime(begin*60)
 start_time = time.strftime('%H:%M:%S', time_start)
 
-time_end = end*60
-time_end = time.gmtime(time_end)
+time_end = time.gmtime(end*60)
 end_time = time.strftime('%H:%M:%S', time_end)
