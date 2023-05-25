@@ -1,6 +1,8 @@
 from connector import dp
 from aiogram.utils import executor
 import logging
+import time
+
 async def bot_online(_):  
     print('Я готов!')
 
@@ -13,5 +15,9 @@ logging.critical("A message of CRITICAL severity")
 
 import exec
 
-executor.start_polling(dp, skip_updates=True, on_startup=bot_online)
-
+while True:
+    try:
+        executor.start_polling(dp, skip_updates=True, on_startup=bot_online)
+    except Exception as e:
+        logging.error(f'Error occurred while polling: {e}')
+        time.sleep(10)  # wait for 10 seconds before trying to start polling again
